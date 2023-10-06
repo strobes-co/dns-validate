@@ -1,0 +1,33 @@
+name: Generate resolvers
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # This will run the action every day at midnight
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
+    - name: Install dependencies
+      run: |
+        pip3 install --no-cache-dir .
+
+    - name: Run Python script
+      run: dns_validate
+    
+    - name: Commit and push changes using git-auto-commit-action
+      uses: stefanzweifel/git-auto-commit-action@v4
+      with:
+        commit_message: "Update resolvers.txt from daily script"
+        commit_options: '--no-verify'  # Optional: This skips pre-commit and commit-msg hooks
+        file_pattern: resolvers.txt
+        branch: main  # Replace with your default branch if it's not "main"
