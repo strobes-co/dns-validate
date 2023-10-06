@@ -4,6 +4,8 @@ import asyncio
 
 OUTPUT_FILE = "resolvers.txt"
 URL = "https://public-dns.info/nameservers.txt"
+TRUSTED_RESOLVERS = ['8.8.8.8', '1.1.1.1']  # Google and Cloudflare DNS
+TRUSTED_DOMAINS = ['google.com', 'amazon.com', 'microsoft.com']
 
 
 async def fetch_dns_list(session):
@@ -12,13 +14,19 @@ async def fetch_dns_list(session):
 
 
 async def validate_dns(dns):
-    resolver = aiodns.DNSResolver(nameservers=[dns])
-    try:
-        await resolver.query('google.com', 'A')
-        return (dns, True)
-    except Exception as e:
-        print(f"DNS {e} is invalid")
-        return (dns, False)
+    for trusted_resolver in TRUSTED_RESOLVERS:
+        resolver = aiodns.DNSResolver(nameservers=[trusted_resolver])
+        try:
+            # Check multiple trusted domains
+            for domain in TRUSTED_DOMAINS:
+                await asyncio.wait_for(resolver.query(domain, 'A'), timeout=5)
+        except asyncio.TimeoutError:
+            print(f"DNS {dns} timed out")
+            return (dns, False)
+        except Exception as e:
+            print(f"DNS {dns} is invalid due to {e}")
+            return (dns, False)
+    return (dns, True)
 
 
 async def async_main():
