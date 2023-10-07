@@ -3,10 +3,13 @@ name: Generate resolvers
 on:
   schedule:
     - cron: '0 0 * * *'  # This will run the action every day at midnight
+  pull_request:
 
 jobs:
   run-script:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
     - name: Checkout repository
